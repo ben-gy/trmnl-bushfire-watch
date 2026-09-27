@@ -56,8 +56,9 @@ the **Checked** time in the title bar.
    CONFIGURATION ERROR. `settings.yml` also passes it through `url_encode`, as TRMNL's help page
    documents for header values. Without the KV binding the Worker still runs, but keeps its
    last-good copies in isolate memory only.
-   Then check the upstreams from the deployed Worker (`placement` should name a Sydney colo, e.g.
-   `remote-SYD`, and `kv` should read `ok`):
+   Then check the upstreams from the deployed Worker (`kv` should read `ok`; `placement` names the
+   colo a request was forwarded to, e.g. `remote-SYD`, and is empty when you call from Australia,
+   because nothing needs forwarding — TRMNL's own polls come from Germany and the US):
    ```bash
    curl -s -H "x-brief-token: $TOKEN" https://trmnl-fire-risk.<account>.workers.dev/v1/sources | jq
    ```

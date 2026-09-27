@@ -11,10 +11,11 @@
   "limits": { "cpu_ms": 1000 },
   // The template (for the DEV-only /preview page) and the BoM/CFA fixtures (for ?fixture=) are text.
   "rules": [{ "type": "Text", "globs": ["**/*.liquid", "**/*.xml"], "fallthrough": true }],
-  // Last-good copy of each source and the district lookup. Create it with
+  // Last-good copy of each source and the district lookup. For your own account, create one with
   //   wrangler kv namespace create FIRE_KV
-  // and paste the printed id below. Without the binding the Worker keeps them in isolate memory only.
-  "kv_namespaces": [{ "binding": "FIRE_KV", "id": "00000000000000000000000000000000" }],
+  // and paste the printed id below (this is the author's). Without the binding (delete the entry)
+  // the Worker keeps them in isolate memory only.
+  "kv_namespaces": [{ "binding": "FIRE_KV", "id": "29e01f96d0b044f5b3bee0860f92ff36" }],
   "vars": {
     // "1" enables GET /preview. `npm run dev` passes --var DEV:1.
     "DEV": "0",
