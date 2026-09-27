@@ -1,0 +1,63 @@
+---
+# TRMNL private plugin definition. `trmnlp push` uploads it and `trmnlp pull` overwrites it.
+# The home location lives only in the TRMNL form field lat_lon: never commit real coordinates.
+# After the first `trmnlp push` (or `trmnlp clone`) add the id it prints, or every push creates a
+# NEW plugin:
+# id: 000000
+name: Bushfire Watch
+description: VIC fire danger, TFB & nearby fires
+strategy: polling
+polling_verb: get
+polling_url: https://trmnl-fire-risk.bens-account-5d3.workers.dev/v1/brief.json
+# Headers, not the query string: Workers logs record URLs, and header names containing
+# "secret" or "token" are redacted. TRMNL splits this on '&' and '=' and wants '=' in a value sent
+# as %3D; its help page (Private Plugins, polling headers) documents `{{ api_key | url_encode }}`
+# for that. A hex token needs no encoding either way.
+polling_headers: "x-brief-token={{ brief_token | url_encode }}&x-home-secret={{ lat_lon }}&x-district={{ district }}&x-radius-km={{ radius_km }}"
+polling_body: ''
+static_data: ''
+refresh_interval: 15
+framework_version: 3.3.2
+no_screen_padding: 'no'
+# Dark mode would flip the meaning of the inverted severity blocks.
+dark_mode: 'no'
+custom_fields:
+- keyname: about
+  field_type: author_bio
+  name: About This Plugin
+  description: "Victorian fire danger rating, Total Fire Ban, warnings and incidents near your home, via your own Cloudflare Worker. Not an official warning service: use the VicEmergency app, emergency.vic.gov.au or Hotline 1800 226 226, and call 000 if you see fire. Data: State of Victoria (CC BY 3.0 AU), Bureau of Meteorology, Open-Meteo (CC BY 4.0)."
+  learn_more_url: https://www.emv.vic.gov.au/responsibilities/victorias-warning-system/emergency-data
+  category: environment,life
+- keyname: lat_lon
+  field_type: lat_lon
+  name: Home location
+  description: "Search your address or enter lat,lon. Used to check whether a warning area covers your home and to measure distances. Stored in TRMNL and sent to your Worker in a request header. The Worker shares it rounded: to about 1 km with Open-Meteo for the weather, and to about 100 m with Vicmap (State of Victoria) to find your fire district and council, even when you pick a district below. Once Vicmap gives a complete answer it is cached for 30 days."
+- keyname: radius_km
+  field_type: number
+  name: Radius (km)
+  description: Warnings, fires, planned burns and other CFA calls within this distance are counted.
+  default: 30
+  placeholder: 30
+  min: 5
+  max: 100
+  step: 1
+- keyname: district
+  field_type: select
+  name: Fire weather district
+  description: Auto uses your home location. Override it only if Auto picks the wrong side of a district border.
+  options:
+  - Auto (from home location): auto
+  - Mallee: mallee
+  - Wimmera: wimmera
+  - Northern Country: northern_country
+  - North East: north_east
+  - North Central: north_central
+  - Central: central
+  - South West: south_west
+  - West and South Gippsland: west_and_south_gippsland
+  - East Gippsland: east_gippsland
+  default: auto
+- keyname: brief_token
+  field_type: password
+  name: Worker token
+  description: "The BRIEF_TOKEN secret set on the Worker (wrangler secret put BRIEF_TOKEN). Hex only (0-9, a-f): generate it with openssl rand -hex 32."

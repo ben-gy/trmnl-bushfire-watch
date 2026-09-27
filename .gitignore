@@ -1,0 +1,8 @@
+node_modules/
+.wrangler/
+.dev.vars
+dist/
+.DS_Store
+*.log
+# Live BoM captures (personal use only) and other local snapshots from `npm run capture`.
+fixtures/local/

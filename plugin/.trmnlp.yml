@@ -1,0 +1,18 @@
+---
+# trmnlp local development only (`trmnlp serve`). Safe to commit.
+watch:
+  - .trmnlp.yml
+  - src
+time_zone: Australia/Melbourne
+custom_fields:
+  # Suburb-level default. Export TRMNL_FIRE_LAT_LON for anything more exact; never commit exact
+  # coordinates.
+  lat_lon: "{{ env.TRMNL_FIRE_LAT_LON | default: '-37.73,145.22' }}"
+  radius_km: 30
+  district: auto
+  # The Worker's BRIEF_TOKEN: hex only (openssl rand -hex 32), as polling_headers splits on & and =.
+  brief_token: "{{ env.TRMNL_FIRE_BRIEF_TOKEN }}"
+variables:
+  trmnl:
+    plugin_settings:
+      instance_name: North Warrandyte

@@ -1,0 +1,23 @@
+{
+  "name": "trmnl-bushfire-watch",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TRMNL private-plugin backend: Victorian fire danger rating, Total Fire Ban, warnings and incidents near one house, plus the weather that drives fire behaviour.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --var DEV:1 --var ALLOW_QUERY_LOCATION:1",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "capture": "node scripts/capture-fixtures.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260925.1",
+    "@types/node": "^22.0.0",
+    "liquidjs": "^10.29.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0",
+    "wrangler": "^4.30.0"
+  }
+}

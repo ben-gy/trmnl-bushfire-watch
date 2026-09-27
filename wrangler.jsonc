@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "trmnl-fire-risk",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  // TRMNL polls from Germany and the US. The hint runs every poll near Sydney instead, so the
+  // upstream fetches (VicEmergency, CFA, BoM, Vicmap) leave from Australia and one warm isolate
+  // serves them. Check `cf-placement` in GET /v1/sources after a deploy; drop this if rejected.
+  "placement": { "region": "aws:ap-southeast-2" },
+  // A busy summer day is ~0.9 MB of GeoJSON to parse and measure: more than the Free plan's 10 ms.
+  "limits": { "cpu_ms": 1000 },
+  // The template (for the DEV-only /preview page) and the BoM/CFA fixtures (for ?fixture=) are text.
+  "rules": [{ "type": "Text", "globs": ["**/*.liquid", "**/*.xml"], "fallthrough": true }],
+  // Last-good copy of each source and the district lookup. Create it with
+  //   wrangler kv namespace create FIRE_KV
+  // and paste the printed id below. Without the binding the Worker keeps them in isolate memory only.
+  "kv_namespaces": [{ "binding": "FIRE_KV", "id": "00000000000000000000000000000000" }],
+  "vars": {
+    // "1" enables GET /preview. `npm run dev` passes --var DEV:1.
+    "DEV": "0",
+    // "1" lets curl pass ?lat=&lon=. Production takes the location from the x-home-secret header only.
+    "ALLOW_QUERY_LOCATION": "0"
+  },
+  // Invocation logs record request URLs; custom logs never include coordinates, tokens or feed text.
+  "observability": { "enabled": true, "logs": { "invocation_logs": false } }
+}

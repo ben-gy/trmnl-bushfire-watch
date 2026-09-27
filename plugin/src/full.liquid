@@ -1,0 +1,445 @@
+{%- comment -%}
+  Bushfire Watch · full layout (Framework 3.3.2, TRMNL OG 800×480, 1-bit).
+  The Worker pre-formats, upper-cases and pre-truncates every string (src/types.ts PayloadV1); this
+  file maps enums to ink and never computes a value, only how much of one fits. Core Liquid only,
+  so LiquidJS (tests, /preview) and TRMNL's Ruby Liquid agree. Every payload string goes through
+  escape; numbers through plus: 0. Presence is tested with .size > 0, never blank: plain Ruby
+  Liquid (no ActiveSupport) treats "" and nil as not blank.
+  Budget 780×410: band 120 / gap 6 / mid 250 / gap 6 / footer 28.
+  Severity is ink weight, never grey: CATASTROPHIC double rule + inverted, EXTREME inverted, HIGH 4 px
+  frame, MODERATE and NO RATING 1 px frame, unavailable dashed.
+  Glyphs are limited to those in the TRMNL fonts (square, dot, circle, open square, times).
+  The statewide and neighbour lines sit under the incidents panel, which has room for two beside
+  four rows but only one beside five; statewide (warnings) wins that slot, and the neighbour line
+  moves to the rating band's right column, which is free only when no house warning,
+  WARNINGS UNAVAILABLE or WARNINGS · OLD DATA chip is there. When neither place is free, a
+  neighbour at Extreme, Catastrophic or under a ban takes the panel slot from the statewide line,
+  which by construction is only Advice or Community Update.
+  An events feed 10–45 min old still reports the house clear; the band then says
+  WARNINGS · OLD DATA, so a stale "no warning here" never looks like a fresh one.
+  A warning over the house takes the band, drawn in the heavier of the warning's and today's ink.
+  On an Extreme or Catastrophic day, today's AFDRS action always shows beside an Advice, Community
+  Update or Watch and Act: it replaces the generic instruction under an Advice or Community Update,
+  and under a Watch and Act whenever the two don't both fit (hb_rating); an Emergency Warning keeps
+  the generic instruction first and adds the action only when it fits. A stale TFB arrives as
+  "TOTAL FIRE BAN · as of 14:05", which takes the smaller pill size in every place a pill appears.
+  The house band's right column is 224 × 96 px at worst: the issued time and "Today:" take 44 px
+  with their gaps, and the rating's note (14), the pill (24, or 16 small) and 12 px instruction
+  lines share the other 52 (hb_room); under hb_rating the issued time and pill shrink to make room.
+  Each day column with weather always names its source: the full line, or under the rating's note
+  (FBI, disagreement or LAST KNOWN) the short "Model…" form. Note, change, indicator and source
+  together overflow 250 px by up to 17 px at 5 px gaps, so that column alone packs at 3 px.
+  The title bar always shows the checked time, error screens included (they were built this
+  minute); only the OUT OF DATE render, or a payload without a time, says NOT UPDATED.
+  Measured in Chrome with the real 3.3.2 CSS; see src/preview.ts.
+{%- endcomment -%}
+<style>
+  .fw-band { height: 120px; }
+  .fw-mid { height: 250px; }
+  .fw-foot { height: 28px; }
+  .fw-f1 { border: 1px solid currentColor; }
+  .fw-f2 { border: 2px solid currentColor; }
+  .fw-f3 { border: 3px solid currentColor; }
+  .fw-f4 { border: 4px solid currentColor; }
+  .fw-fd { border: 2px dashed currentColor; }
+  .fw-fill { background: currentColor; }
+  .fw-lh1 { line-height: 1; }
+  .fw-caps { line-height: 0.86; }
+  .fw-clip { overflow: hidden; min-width: 0; min-height: 0; }
+  .fw-seg { height: 14px; }
+  .fw-bar { width: 6px; align-self: stretch; flex: none; }
+</style>
+{%- liquid
+  assign today = days[0]
+  assign tomorrow = days[1]
+  assign fw_title = trmnl.plugin_settings.instance_name | default: 'Bushfire Watch'
+  assign fw_received = feed_received_local | default: 'unknown'
+  assign fw_source = 'Source: State of Victoria (CC BY 3.0 AU) · BoM · Open-Meteo (CC BY 4.0) · VicEmergency data received ' | append: fw_received
+  assign fw_source = attribution | default: fw_source
+  assign fw_disclaimer = disclaimer | default: 'Not an official warning service. Use the VicEmergency app, emergency.vic.gov.au or Hotline 1800 226 226. If you see fire, call 000.'
+
+  assign now_s = trmnl.system.timestamp_utc | plus: 0
+  assign gen_s = generated_epoch | plus: 0
+  assign age_s = now_s | minus: gen_s
+  assign fw_down = false
+  assign fw_old = false
+  assign fw_down_title = ''
+  assign fw_down_text = ''
+  if ok != true or v != 1
+    assign fw_down = true
+    assign fw_down_title = down_title | default: 'DATA UNAVAILABLE'
+    assign fw_down_text = down_reason | default: 'Fire danger, Total Fire Ban and warning information could not be loaded.'
+  elsif sample != true
+    if gen_s == 0 or age_s > 3600
+      assign fw_down = true
+      assign fw_old = true
+      assign fw_down_title = 'OUT OF DATE'
+      assign fw_down_text = 'This screen has not been updated for over an hour.'
+    endif
+  endif
+
+  assign down_size = 'value--xlarge'
+  if fw_down_title.size > 20
+    assign down_size = ''
+  elsif fw_down_title.size > 15
+    assign down_size = 'value--large'
+  endif
+
+  assign fw_checked = ''
+  if checked_local.size > 0
+    assign fw_checked = 'Checked ' | append: checked_local
+  endif
+  assign fw_instance = fw_checked
+  if fw_old or fw_checked.size == 0
+    assign fw_instance = 'NOT UPDATED'
+  endif
+  if sample == true
+    assign fw_instance = 'SAMPLE DATA · NOT LIVE · ' | append: fw_instance
+  endif
+
+  assign t_lvl = today.fdr.level | default: -1 | plus: 0
+  assign t_word = today.fdr.word | default: 'RATING UNAVAILABLE'
+  assign band_inner = ''
+  case t_lvl
+    when 4
+      assign band_outer = 'fw-f4 p--1'
+      assign band_inner = 'inverse px--2 py--1'
+    when 3
+      assign band_outer = 'inverse p--2'
+    when 2
+      assign band_outer = 'fw-f4 p--2'
+    when 1, 0
+      assign band_outer = 'fw-f1 p--2'
+    else
+      assign band_outer = 'fw-fd p--2'
+  endcase
+
+  assign inc_ok = false
+  if incidents.ok == true and incidents.counts.size == 5
+    assign inc_ok = true
+  endif
+  assign house_on = false
+  assign warn_unknown = true
+  if house.status == 'in_warning'
+    assign house_on = true
+    assign warn_unknown = false
+  elsif house.status == 'clear' and inc_ok
+    assign warn_unknown = false
+  endif
+  assign h_rank = house.rank | default: 0 | plus: 0
+  assign h_level = house.level | default: 'WARNING'
+  assign warn_inner = ''
+  case h_rank
+    when 3
+      assign warn_outer = 'fw-f4 p--1'
+      assign warn_inner = 'inverse px--2 py--1'
+    when 2
+      assign warn_outer = 'inverse p--2'
+    else
+      assign warn_outer = 'fw-f4 p--2'
+  endcase
+  assign h_lift = h_rank | plus: 2
+  if t_lvl >= h_lift
+    assign warn_outer = band_outer
+    assign warn_inner = band_inner
+  endif
+  assign warn_old = false
+  if house.status == 'clear' and warn_unknown == false and incidents.stale == true
+    assign warn_old = true
+  endif
+
+  assign t_note = today.fdr.issued | default: ''
+  assign t_ban = false
+  if today.tfb.state == 'declared'
+    assign t_ban = true
+  endif
+  assign t_ban_text = today.tfb.text | default: 'TOTAL FIRE BAN'
+  assign t_ban_long = false
+  if t_ban_text.size > 14
+    assign t_ban_long = true
+  endif
+  assign hb_room = 52
+  if t_note.size > 0
+    assign hb_room = hb_room | minus: 14
+  endif
+  assign hb_pill_small = t_ban_long
+  if t_ban
+    if t_ban_long
+      assign hb_room = hb_room | minus: 16
+    else
+      assign hb_room = hb_room | minus: 24
+    endif
+  endif
+  assign hb_rating = false
+  if h_rank <= 1 and t_lvl >= 3
+    assign hb_rating = true
+  elsif h_rank == 2 and t_lvl >= 3 and hb_room < 38
+    assign hb_rating = true
+  endif
+  assign hb_issued_small = false
+  if hb_rating and hb_room < 24
+    assign hb_issued_small = true
+    assign hb_room = hb_room | plus: 6
+    if t_ban and hb_pill_small == false
+      assign hb_pill_small = true
+      assign hb_room = hb_room | plus: 8
+    endif
+  endif
+
+  assign row_n = 0
+  if inc_ok
+    assign row_n = incidents.rows.size | default: 0 | plus: 0
+    if row_n > 5
+      assign row_n = 5
+    endif
+  endif
+  assign ctx_slots = 2
+  if row_n >= 5
+    assign ctx_slots = 1
+  endif
+  assign sw_on = false
+  if statewide.size > 0
+    assign sw_on = true
+    assign ctx_slots = ctx_slots | minus: 1
+  endif
+  assign nb_alarm = false
+  assign nb_ban = neighbours | split: ' · ' | last
+  if neighbours contains ': CATASTROPHIC' or neighbours contains ': EXTREME' or nb_ban == 'TFB' or nb_ban == 'TOTAL FIRE BAN'
+    assign nb_alarm = true
+  endif
+  assign nb_where = ''
+  if neighbours.size > 0
+    if ctx_slots > 0
+      assign nb_where = 'panel'
+    elsif house_on == false and warn_unknown == false and warn_old == false
+      assign nb_where = 'band'
+    elsif nb_alarm
+      assign nb_where = 'panel'
+      assign sw_on = false
+    endif
+  endif
+-%}
+{%- if fw_down -%}
+<div class="layout layout--col layout--center layout--stretch-x gap">
+  <div class="fw-f4 p--3 flex flex--col flex--stretch-x flex--top gap--small">
+    <div class="flex flex--row flex--left"><span class="value {{ down_size }} fw-lh1" data-value-fit="true">{{ fw_down_title | escape }}</span></div>
+    <span class="title">{{ fw_down_text | escape }}</span>
+    <span class="label">Do not rely on this screen for fire danger ratings, Total Fire Bans or warnings.</span>
+    {%- if fw_old %}
+    {%- if checked_local.size > 0 %}
+    <span class="label">Last update: {{ checked_local | escape }}</span>
+    {%- endif %}
+    {%- elsif checked_local.size > 0 %}
+    <span class="label">Checked {{ checked_local | escape }}{% if last_good_local.size > 0 %} · Last successful update: {{ last_good_local | escape }}{% endif %}</span>
+    {%- elsif last_good_local.size > 0 %}
+    <span class="label">Last successful update: {{ last_good_local | escape }}</span>
+    {%- endif %}
+  </div>
+  <div class="inverse p--3 flex flex--col flex--stretch-x flex--top gap--small">
+    <span class="title">Check the VicEmergency app or emergency.vic.gov.au</span>
+    <span class="title">VicEmergency Hotline 1800 226 226 · If you see fire, call 000</span>
+  </div>
+  <div class="flex flex--col flex--stretch-x flex--top gap--[4px]">
+    <span class="description" data-clamp="1">{{ fw_source | escape }}</span>
+    <span class="description" data-clamp="1">{{ fw_disclaimer | escape }}</span>
+  </div>
+</div>
+{%- else -%}
+<div class="layout layout--col layout--top layout--stretch-x gap--[6px]">
+  {%- if house_on -%}
+  <div class="fw-band {{ warn_outer }}">
+    <div class="h--full {{ warn_inner }} flex flex--row flex--left gap">
+      <div class="grow fw-clip h--full flex flex--col flex--stretch-x flex--top gap--[3px]">
+        <span class="title title--small" data-clamp="1">{{ house.kicker | default: 'YOU ARE IN A WARNING AREA' | escape }}</span>
+        <div class="flex flex--row flex--left"><span class="value{% if h_level.size <= 13 %} value--large{% endif %} fw-caps" data-value-fit="true">{{ h_level | escape }}</span></div>
+        <span class="label" data-clamp="1">{{ house.action | escape }}</span>
+      </div>
+      <div class="shrink-0 w--56 h--full flex flex--col flex--stretch-x flex--top gap--[2px]">
+        <span class="label{% if hb_issued_small %} label--small{% endif %}" data-clamp="1">{{ house.issued | escape }}</span>
+        <span class="label" data-clamp="1">Today: {{ t_word | escape }}</span>
+        {%- if t_note.size > 0 %}
+        <span class="description" data-clamp="1">{{ t_note | escape }}</span>
+        {%- endif %}
+        {%- if t_ban %}
+        <div class="flex flex--row flex--left"><span class="label{% if hb_pill_small %} label--small{% endif %} label--filled">{{ t_ban_text | escape }}</span></div>
+        {%- endif %}
+        {%- if hb_rating %}
+        <span class="description" data-clamp="2">{{ today.fdr.action | default: 'Check emergency.vic.gov.au or the VicEmergency app' | escape }}</span>
+        {%- elsif t_lvl >= 3 and hb_room >= 38 %}
+        {%- if hb_room >= 50 %}
+        <span class="description" data-clamp="2">Follow the warning. Check the VicEmergency app now.</span>
+        {%- else %}
+        <span class="description" data-clamp="1">Follow the warning.</span>
+        {%- endif %}
+        <span class="description" data-clamp="2">{{ today.fdr.action | default: 'Check emergency.vic.gov.au or the VicEmergency app' | escape }}</span>
+        {%- elsif hb_room >= 24 %}
+        <span class="description" data-clamp="2">Follow the warning. Check the VicEmergency app now.</span>
+        {%- else %}
+        <span class="description" data-clamp="1">Follow the warning.</span>
+        {%- endif %}
+      </div>
+    </div>
+  </div>
+  {%- else -%}
+  <div class="fw-band {{ band_outer }}">
+    <div class="h--full {{ band_inner }} flex flex--row flex--left gap">
+      <div class="grow fw-clip h--full flex flex--col flex--stretch-x flex--top gap--[3px]">
+        <span class="title title--small" data-clamp="1">{% if sample == true %}SAMPLE · {% endif %}FIRE DANGER TODAY · {{ district | default: 'DISTRICT UNKNOWN' | upcase | escape }}</span>
+        <div class="flex flex--row flex--left"><span class="value{% if t_word.size <= 12 %} value--large{% endif %} fw-caps" data-value-fit="true">{{ t_word | escape }}</span></div>
+        <span class="label" data-clamp="1">{{ today.fdr.action | default: 'Check emergency.vic.gov.au or the VicEmergency app' | escape }}</span>
+      </div>
+      <div class="shrink-0 w--64 h--full flex flex--col flex--stretch-x flex--top gap--[3px]">
+        <div class="flex flex--row flex--left">
+        {%- case today.tfb.state -%}
+          {%- when 'declared' -%}<span class="label{% if t_ban_long == false %} label--large{% endif %} label--filled">{{ t_ban_text | escape }}</span>
+          {%- when 'none' -%}<span class="label fw-f1 px--1" data-clamp="1">{{ today.tfb.text | default: 'No TFB' | escape }}</span>
+          {%- else -%}<span class="label fw-fd px--1" data-clamp="1">{{ today.tfb.text | default: 'TFB status unavailable' | escape }}</span>
+        {%- endcase -%}
+        </div>
+        {%- if t_lvl >= 0 %}
+        <div class="flex flex--col flex--stretch-x gap--[2px]">
+          <div class="grid grid--cols-4 gap--xsmall">
+            {%- for i in (1..4) -%}<div class="fw-seg {% if t_lvl >= i %}fw-fill{% else %}fw-f2{% endif %}"></div>{%- endfor -%}
+          </div>
+          <div class="grid grid--cols-4 gap--xsmall">
+            <span class="description text--center">MOD</span><span class="description text--center">HIGH</span><span class="description text--center">EXT</span><span class="description text--center">CAT</span>
+          </div>
+        </div>
+        {%- endif %}
+        {%- if t_note.size > 0 %}
+        <span class="description" data-clamp="1">{{ t_note | escape }}</span>
+        {%- endif %}
+        {%- if nb_where == 'band' %}
+        <span class="description" data-clamp="1">{{ neighbours | escape }}</span>
+        {%- endif %}
+        {%- if warn_unknown %}
+        <div class="flex flex--row flex--left"><span class="label label--small fw-fd px--1">WARNINGS UNAVAILABLE</span></div>
+        {%- elsif warn_old %}
+        <div class="flex flex--row flex--left"><span class="label label--small fw-fd px--1">WARNINGS · OLD DATA</span></div>
+        {%- endif %}
+      </div>
+    </div>
+  </div>
+  {%- endif -%}
+
+  <div class="grid grid--cols-12 fw-mid">
+    {%- for d in days limit: 2 -%}
+    {%- assign lvl = d.fdr.level | default: -1 | plus: 0 %}
+    {%- assign col_tight = false %}
+    {%- if d.wx.ok == true and d.fdr.issued.size > 0 and d.wx.change.size > 0 and d.wx.text.size > 0 %}{% assign col_tight = true %}{% endif %}
+    <div class="col--span-3 fw-clip flex flex--col flex--stretch-x flex--top {% if col_tight %}gap--[3px]{% else %}gap--xsmall{% endif %}">
+      <span class="title title--small" data-clamp="1">{{ d.label | escape }}</span>
+      <div class="flex flex--row flex--left">
+      {%- case lvl -%}
+        {%- when 4 -%}<span class="fw-f2 p--0.5 flex"><span class="label label--filled">{{ d.fdr.word | escape }}</span></span>
+        {%- when 3 -%}<span class="label label--filled">{{ d.fdr.word | escape }}</span>
+        {%- when 2 -%}<span class="label fw-f3 px--1">{{ d.fdr.word | escape }}</span>
+        {%- when 1, 0 -%}<span class="label fw-f1 px--1">{{ d.fdr.word | escape }}</span>
+        {%- else -%}<span class="label fw-fd px--1" data-clamp="1">{{ d.fdr.word | default: 'UNAVAILABLE' | escape }}</span>
+      {%- endcase -%}
+      </div>
+      {%- if d.fdr.issued.size > 0 %}
+      <span class="description" data-clamp="1">{{ d.fdr.issued | escape }}</span>
+      {%- endif %}
+      {%- if d.wx.ok == true %}
+      <span class="value value--small value--tnums">{{ d.wx.temps | escape }}</span>
+      <span class="label" data-clamp="1">{{ d.wx.rh | escape }}</span>
+      <span class="label" data-clamp="1">{{ d.wx.wind | escape }}</span>
+      {%- if d.wx.change.size > 0 %}
+      <div class="flex flex--row flex--left"><span class="label{% if d.wx.change_flag == true %} label--filled{% endif %}" data-clamp="1">{{ d.wx.change | escape }}</span></div>
+      {%- endif %}
+      <span class="label" data-clamp="1">{{ d.wx.rain | escape }}</span>
+      {%- if d.wx.text.size > 0 %}
+      <span class="description" data-clamp="1">{{ d.wx.text | escape }}</span>
+      {%- endif %}
+      {%- if d.fdr.issued.size > 0 %}
+      <span class="description" data-clamp="1">{{ d.wx.src_short | default: d.wx.src | default: 'Open-Meteo model' | escape }}</span>
+      {%- else %}
+      <span class="description" data-clamp="1">{{ d.wx.src | default: 'Open-Meteo model' | escape }}</span>
+      {%- endif %}
+      {%- else %}
+      <div class="flex flex--row flex--left"><span class="label fw-fd px--1">Forecast unavailable</span></div>
+      {%- endif %}
+      {%- assign ban_text = d.tfb.text | default: 'TOTAL FIRE BAN' %}
+      <div class="flex flex--row flex--left">
+      {%- case d.tfb.state -%}
+        {%- when 'declared' -%}<span class="label{% if ban_text.size > 14 %} label--small{% endif %} label--filled" data-clamp="1">{{ ban_text | escape }}</span>
+        {%- when 'none' -%}<span class="label fw-f1 px--1" data-clamp="1">No TFB</span>
+        {%- else -%}<span class="label fw-fd px--1" data-clamp="1">{{ d.tfb.text | default: 'TFB unavailable' | escape }}</span>
+      {%- endcase -%}
+      </div>
+    </div>
+    {%- endfor %}
+
+    <div class="col--span-6 fw-clip flex flex--col flex--stretch-x flex--top gap--xsmall">
+      <div class="flex flex--row flex--between gap--xsmall">
+        <span class="title title--small shrink-0">{{ incidents.heading | default: 'NEARBY' | escape }}</span>
+        <span class="label label--small{% if incidents.stale == true %} label--filled{% endif %}" data-clamp="1">{{ incidents.as_at | escape }}</span>
+      </div>
+      {%- if inc_ok %}
+      <div class="grid grid--cols-5 gap--xsmall">
+        {%- for c in incidents.counts limit: 5 %}
+        <div class="fw-count fw-f1{% if c.hot == true %} inverse{% endif %} flex flex--col flex--stretch-x gap--none">
+          <span class="value value--small value--tnums text--center fw-lh1">{{ c.n | escape }}</span>
+          <span class="description text--center">{{ c.label | escape }}</span>
+        </div>
+        {%- endfor %}
+      </div>
+      {%- if row_n > 0 %}
+      <div class="flex flex--col flex--stretch-x flex--top gap--[3px]">
+      {%- for r in incidents.rows limit: row_n %}
+      {%- case r.kind -%}
+        {%- when 'warning' -%}{%- assign g = '&#9632;' -%}
+        {%- when 'fire' -%}{%- assign g = '&#9679;' -%}
+        {%- when 'fire_ctrl' -%}{%- assign g = '&#9675;' -%}
+        {%- when 'burn' -%}{%- assign g = '&#9633;' -%}
+        {%- else -%}{%- assign g = '&#215;' -%}
+      {%- endcase %}
+      {%- assign sev = r.sev | plus: 0 %}
+      <div class="flex flex--row flex--left gap--small">
+        <div class="fw-bar {% if sev >= 3 %}fw-fill{% elsif sev == 2 %}fw-f2{% else %}fw-f1{% endif %}"></div>
+        <div class="grow fw-clip flex flex--col flex--stretch-x flex--top gap--[1px]">
+          <div class="flex flex--row flex--between gap--xsmall">
+            <span class="title title--small grow fw-clip" data-clamp="1">{{ g }} {{ r.line1 | escape }}</span>
+            {%- if r.upwind == true %}<span class="label label--small label--filled shrink-0">UPWIND</span>{% endif %}
+          </div>
+          <span class="description" data-clamp="1">{{ r.line2 | escape }}</span>
+        </div>
+      </div>
+      {%- endfor %}
+      </div>
+      {%- elsif incidents.stale == true %}
+      <div class="fw-fd p--2"><span class="label">Old data. Check the VicEmergency app for nearby fires and warnings.</span></div>
+      {%- else %}
+      <div class="fw-f1 p--2"><span class="label">{{ incidents.empty_text | default: 'Check the VicEmergency app for nearby fires and warnings.' | escape }}</span></div>
+      {%- endif %}
+      {%- else %}
+      <div class="fw-fd p--2 flex flex--col flex--stretch-x flex--top gap--xsmall">
+        <span class="title">INCIDENTS &amp; WARNINGS UNAVAILABLE</span>
+        <span class="label" data-clamp="2">{{ incidents.error_text | default: 'Nearby fires and warnings could not be checked.' | escape }}</span>
+        <span class="label">Check the VicEmergency app or emergency.vic.gov.au</span>
+      </div>
+      {%- endif %}
+      {%- if sw_on or nb_where == 'panel' %}
+      <div class="flex flex--col flex--stretch-x flex--top gap--[2px]">
+        {%- if sw_on %}
+        <span class="description" data-clamp="1">{{ statewide | escape }}</span>
+        {%- endif %}
+        {%- if nb_where == 'panel' %}
+        <span class="description" data-clamp="1">{{ neighbours | escape }}</span>
+        {%- endif %}
+      </div>
+      {%- endif %}
+    </div>
+  </div>
+
+  <div class="fw-foot fw-clip flex flex--col flex--stretch-x flex--top gap--[4px]">
+    <span class="description" data-clamp="1">{{ fw_source | escape }}</span>
+    <span class="description" data-clamp="1">{{ fw_disclaimer | escape }}</span>
+  </div>
+</div>
+{%- endif %}
+<div class="title_bar">
+  <span class="title">{{ fw_title | escape }}</span>
+  <span class="instance">{{ fw_instance | escape }}</span>
+</div>

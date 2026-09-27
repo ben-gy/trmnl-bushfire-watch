@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic test data in the shape of BoM product IDV18560; not Bureau of Meteorology data. -->
+<!-- Every value is invented for the tests. Live captures (npm run capture) go to fixtures/local/, which git ignores. -->
+<product version="1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="product.xsd">
+    <amoc>
+        <source>
+            <sender>Synthetic test data</sender>
+            <region>Victoria</region>
+            <office>TEST</office>
+        </source>
+        <identifier>IDV18560</identifier>
+        <issue-time-utc>2026-09-27T06:00:00Z</issue-time-utc>
+        <issue-time-local tz="EST">2026-09-27T16:00:00+10:00</issue-time-local>
+        <sent-time>2026-09-27T06:01:00Z</sent-time>
+        <expiry-time>2026-09-28T06:00:00Z</expiry-time>
+        <validity-bgn-time-local tz="EST">2026-09-28T00:00:00+10:00</validity-bgn-time-local>
+        <validity-end-time-local tz="EST">2026-09-28T23:59:59+10:00</validity-end-time-local>
+        <next-routine-issue-time-utc>2026-09-27T20:30:00Z</next-routine-issue-time-utc>
+        <next-routine-issue-time-local tz="EST">2026-09-28T06:30:00+10:00</next-routine-issue-time-local>
+        <status>O</status>
+        <service>WSF</service>
+        <sub-service>FFW</sub-service>
+        <product-type>F</product-type>
+        <phase>NEW</phase>
+    </amoc>
+    <forecast>
+        <area aac="VIC_FA001" description="Victoria" type="region">
+            <forecast-period start-time-local="2026-09-27T16:00:00+10:00" end-time-local="2026-09-27T16:00:00+10:00" start-time-utc="2026-09-27T06:00:00Z" end-time-utc="2026-09-27T06:00:00Z">
+                <element type="fire_weather_forecast_bullet_notes">Synthetic bullet notes.</element>
+            </forecast-period>
+            <forecast-period index="1" start-time-local="2026-09-28T00:00:00+10:00" end-time-local="2026-09-29T00:00:00+10:00" start-time-utc="2026-09-27T14:00:00Z" end-time-utc="2026-09-28T14:00:00Z">
+                <element type="fuel_type_1">Grassland</element>
+                <element type="fuel_type_2">Woodland</element>
+                <text type="fire_weather_forecast_notes">Synthetic forecast notes.</text>
+            </forecast-period>
+        </area>
+        <area aac="VIC_FG001" description="Group 1" type="group" parent-aac="VIC_FA001"/>
+        <area aac="VIC_FW007" description="Central" type="fire-district" parent-aac="VIC_FG001">
+            <forecast-period index="1" start-time-local="2026-09-28T00:00:00+10:00" end-time-local="2026-09-29T00:00:00+10:00" start-time-utc="2026-09-27T14:00:00Z" end-time-utc="2026-09-28T14:00:00Z">
+                <element type="fire_danger_rating">No Rating</element>
+                <element type="fire_behaviour_index">8</element>
+                <element type="fire_danger_rating_max_in_subareas">No Rating</element>
+                <element type="haines_index">9</element>
+                <element type="haines_flag">no</element>
+                <element type="lightning_activity_level">0</element>
+                <element type="wind_change_danger_index">14</element>
+                <element type="wind_change_danger_flag">no</element>
+                <element type="minor_fdr_extreme_flag">no</element>
+                <element type="minor_fdr_extreme_district_below_flag">no</element>
+                <element type="air_temperature_maximum_50_percentile">19</element>
+                <element type="air_temperature_maximum_90_percentile">21</element>
+                <element type="mixing_height">1500</element>
+                <element type="precipitation_25_percentile">0.0</element>
+                <element type="precipitation_75_percentile">0.2</element>
+                <element type="relative_humidity_minimum_10_percentile">44</element>
+                <element type="relative_humidity_minimum_50_percentile">49</element>
+                <element type="wind_direction_at_elevation_1">SSE</element>
+                <element type="wind_speed_at_elevation_1_50_percentile">12</element>
+                <element type="wind_speed_at_elevation_1_90_percentile">17</element>
+                <element type="wind_gust_at_elevation_1_50_percentile">17</element>
+                <element type="wind_gust_at_elevation_1_90_percentile">28</element>
+                <element type="wind_direction_at_elevation_2">NE</element>
+                <element type="wind_speed_at_elevation_2">18</element>
+                <element type="coverage_fuel_1">58</element>
+                <element type="fire_behaviour_ind_ft_1">7</element>
+            </forecast-period>
+        </area>
+        <area aac="VIC_FS029" description="Nillumbik" type="fire-sub-area" parent-aac="VIC_FW007">
+            <forecast-period index="1" start-time-local="2026-09-28T00:00:00+10:00" end-time-local="2026-09-29T00:00:00+10:00" start-time-utc="2026-09-27T14:00:00Z" end-time-utc="2026-09-28T14:00:00Z">
+                <element type="fire_danger_rating">No Rating</element>
+                <element type="fire_behaviour_index">7</element>
+                <element type="haines_index">8</element>
+                <element type="haines_flag">no</element>
+                <element type="lightning_activity_level">0</element>
+                <element type="wind_change_danger_index">13</element>
+                <element type="wind_change_danger_flag">no</element>
+            </forecast-period>
+        </area>
+        <area aac="VIC_FW008" description="North Central" type="fire-district" parent-aac="VIC_FG001">
+            <forecast-period index="1" start-time-local="2026-09-28T00:00:00+10:00" end-time-local="2026-09-29T00:00:00+10:00" start-time-utc="2026-09-27T14:00:00Z" end-time-utc="2026-09-28T14:00:00Z">
+                <element type="fire_danger_rating">No Rating</element>
+                <element type="fire_behaviour_index">9</element>
+                <element type="fire_danger_rating_max_in_subareas">No Rating</element>
+                <element type="haines_index">10</element>
+                <element type="haines_flag">no</element>
+                <element type="lightning_activity_level">0</element>
+                <element type="wind_change_danger_index">19</element>
+                <element type="wind_change_danger_flag">no</element>
+                <element type="minor_fdr_extreme_flag">no</element>
+                <element type="minor_fdr_extreme_district_below_flag">no</element>
+                <element type="air_temperature_maximum_50_percentile">21</element>
+                <element type="air_temperature_maximum_90_percentile">23</element>
+                <element type="mixing_height">1800</element>
+                <element type="precipitation_25_percentile">0.0</element>
+                <element type="precipitation_75_percentile">0.0</element>
+                <element type="relative_humidity_minimum_10_percentile">38</element>
+                <element type="relative_humidity_minimum_50_percentile">45</element>
+                <element type="wind_direction_at_elevation_1">S</element>
+                <element type="wind_speed_at_elevation_1_50_percentile">14</element>
+                <element type="wind_speed_at_elevation_1_90_percentile">19</element>
+                <element type="wind_gust_at_elevation_1_50_percentile">20</element>
+                <element type="wind_gust_at_elevation_1_90_percentile">30</element>
+                <element type="wind_direction_at_elevation_2">N</element>
+                <element type="wind_speed_at_elevation_2">20</element>
+                <element type="coverage_fuel_1">66</element>
+                <element type="fire_behaviour_ind_ft_1">9</element>
+            </forecast-period>
+        </area>
+        <area aac="VIC_FS072" description="Murrindindi" type="fire-sub-area" parent-aac="VIC_FW008">
+            <forecast-period index="1" start-time-local="2026-09-28T00:00:00+10:00" end-time-local="2026-09-29T00:00:00+10:00" start-time-utc="2026-09-27T14:00:00Z" end-time-utc="2026-09-28T14:00:00Z">
+                <element type="fire_danger_rating">No Rating</element>
+                <element type="fire_behaviour_index">8</element>
+                <element type="haines_index">9</element>
+                <element type="haines_flag">no</element>
+                <element type="lightning_activity_level">1</element>
+                <element type="wind_change_danger_index">15</element>
+                <element type="wind_change_danger_flag">no</element>
+            </forecast-period>
+        </area>
+        <area aac="VIC_FW002" description="Wimmera" type="fire-district" parent-aac="VIC_FG001">
+            <forecast-period index="1" start-time-local="2026-09-28T00:00:00+10:00" end-time-local="2026-09-29T00:00:00+10:00" start-time-utc="2026-09-27T14:00:00Z" end-time-utc="2026-09-28T14:00:00Z">
+                <element type="fire_danger_rating">No Rating</element>
+                <element type="fire_behaviour_index">6</element>
+                <element type="fire_danger_rating_max_in_subareas">No Rating</element>
+                <element type="haines_index">7</element>
+                <element type="haines_flag">no</element>
+                <element type="lightning_activity_level">0</element>
+                <element type="wind_change_danger_index">11</element>
+                <element type="wind_change_danger_flag">no</element>
+                <element type="minor_fdr_extreme_flag">no</element>
+                <element type="minor_fdr_extreme_district_below_flag">no</element>
+                <element type="air_temperature_maximum_50_percentile">22</element>
+                <element type="air_temperature_maximum_90_percentile">24</element>
+                <element type="mixing_height">2100</element>
+                <element type="precipitation_25_percentile">0.0</element>
+                <element type="precipitation_75_percentile">0.0</element>
+                <element type="relative_humidity_minimum_10_percentile">35</element>
+                <element type="relative_humidity_minimum_50_percentile">41</element>
+                <element type="wind_direction_at_elevation_1">SW</element>
+                <element type="wind_speed_at_elevation_1_50_percentile">16</element>
+                <element type="wind_speed_at_elevation_1_90_percentile">21</element>
+                <element type="wind_gust_at_elevation_1_50_percentile">22</element>
+                <element type="wind_gust_at_elevation_1_90_percentile">32</element>
+                <element type="wind_direction_at_elevation_2">W</element>
+                <element type="wind_speed_at_elevation_2">24</element>
+                <element type="coverage_fuel_1">80</element>
+                <element type="fire_behaviour_ind_ft_1">6</element>
+            </forecast-period>
+        </area>
+        <area aac="VIC_FS010" description="Horsham" type="fire-sub-area" parent-aac="VIC_FW002">
+            <forecast-period index="1" start-time-local="2026-09-28T00:00:00+10:00" end-time-local="2026-09-29T00:00:00+10:00" start-time-utc="2026-09-27T14:00:00Z" end-time-utc="2026-09-28T14:00:00Z">
+                <element type="fire_danger_rating">No Rating</element>
+                <element type="fire_behaviour_index">6</element>
+                <element type="haines_index">7</element>
+                <element type="haines_flag">no</element>
+                <element type="lightning_activity_level">0</element>
+                <element type="wind_change_danger_index">10</element>
+                <element type="wind_change_danger_flag">no</element>
+            </forecast-period>
+        </area>
+    </forecast>
+</product>
