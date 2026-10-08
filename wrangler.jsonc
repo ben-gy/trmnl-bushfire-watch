@@ -3,6 +3,9 @@
   "name": "trmnl-fire-risk",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-01",
+  // TRMNL polls the workers.dev URL. Nothing uses per-version preview URLs, which would expose
+  // every uploaded version on its own hostname, so they stay off.
+  "preview_urls": false,
   // TRMNL polls from Germany and the US. The hint runs every poll near Sydney instead, so the
   // upstream fetches (VicEmergency, CFA, BoM, Vicmap) leave from Australia and one warm isolate
   // serves them. Check `cf-placement` in GET /v1/sources after a deploy; drop this if rejected.
